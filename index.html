@@ -82,7 +82,10 @@ button:disabled{background:#59636c;color:#ddd;cursor:not-allowed}
    <div>재장전 속도
     <small>현재 <span id="reloadNow">1.30</span>초 → 구매 후 <span id="reloadNext">1.05</span>초<br>최저 0.40초 · 단축키 3</small>
    </div>
-   <button id="reloadBtn" onclick="upgrade('reload')">🪙 <span id="costReload">35</span></button>
+   <button id="reloadBtn" onclick="upgrade('reload')">
+    <span id="reloadCostLabel">🪙 <span id="costReload">35</span></span>
+    <span id="reloadDoneLabel" style="display:none">업그레이드 완료</span>
+   </button>
   </div>
 
   <div class="shoprow">
@@ -246,7 +249,6 @@ function drawCover(){
  ctx.fillStyle="#55452e";
  ctx.fillRect(0,wallY+85,900,15);
 
- /* 담벼락 체력 표시 */
  ctx.fillStyle="#111d";
  ctx.fillRect(330,455,240,30);
  ctx.fillStyle="#fff";
@@ -541,25 +543,46 @@ function throwGrenade(){
  }else{say("주변에 적이 없습니다.")}
 }
 
-/* 특수 포탄: 조준한 위치로 발사 */
+/* 특수 포탄: 헬기 우선 자동 추적 */
 function useShell(){
  if(!running||paused||over)return;
  if(shells<=0){say("특수 포탄이 없습니다!");return}
 
+ let targetType=null;
+ let target=null;
+
+ /* 헬기가 있으면 무조건 헬기를 우선 추적 */
+ if(heli){
+  targetType="heli";
+ }else if(missiles.length){
+  /* 헬기가 없으면 날아오는 미사일 추적 */
+  targetType="missile";
+  target=missiles[0];
+ }else if(enemies.length){
+  /* 헬기와 미사일이 없으면 일반 적 추적 */
+  targetType="enemy";
+  target=enemies[0];
+ }else{
+  say("추적할 목표가 없습니다!");
+  return;
+ }
+
  shells--;
- let startX=570-playerX*.15;
- let startY=420;
- let dx=aimX-startX;
- let dy=aimY-startY;
- let length=Math.hypot(dx,dy)||1;
 
  shellShots.push({
-  x:startX,y:startY,
-  vx:dx/length*13,
-  vy:dy/length*13,
-  life:90
+  x:570-playerX*.15,
+  y:420,
+  vx:0,
+  vy:0,
+  life:150,
+  targetType,
+  target
  });
- say("🚀 특수 포탄 발사!");
+
+ say(targetType==="heli"?"🚀 헬기 자동 추적 발사!":
+     targetType==="missile"?"🚀 적 미사일 자동 추적 발사!":
+     "🚀 적 자동 추적 발사!");
+
  hud();
 }
 
@@ -649,14 +672,12 @@ function update(){
 
  if(warning>0)warning--;
 
- /* 미사일 이동 */
  missiles.forEach(m=>m.y+=m.speed);
  missiles=missiles.filter(m=>{
   if(m.y>=490){missileHit(m);return false}
   return true;
  });
 
- /* 적 이동 및 담벼락 공격 */
  for(let i=enemies.length-1;i>=0;i--){
   let e=enemies[i];
   e.z+=e.speed;
@@ -675,58 +696,86 @@ function update(){
   }
  }
 
- /* 특수 포탄 이동 및 헬기·미사일·적 충돌 */
+ /* 자동 추적 특수 포탄 */
  for(let i=shellShots.length-1;i>=0;i--){
   let s=shellShots[i];
-  s.x+=s.vx;s.y+=s.vy;s.life--;
-  let hit=false;
+  let tx=null,ty=null;
 
-  /* 헬기 명중 */
-  if(heli&&Math.abs(s.x-heli.x)<75&&Math.abs(s.y-heli.y)<42){
-   for(let j=0;j<35;j++){
+  if(s.targetType==="heli"){
+   if(!heli){
+    shellShots.splice(i,1);
+    continue;
+   }
+   tx=heli.x;
+   ty=heli.y;
+  }else if(s.targetType==="missile"){
+   if(!missiles.includes(s.target)){
+    shellShots.splice(i,1);
+    continue;
+   }
+   tx=s.target.x;
+   ty=s.target.y;
+  }else if(s.targetType==="enemy"){
+   if(!enemies.includes(s.target)){
+    shellShots.splice(i,1);
+    continue;
+   }
+   let p=project(s.target);
+   tx=p.x;
+   ty=p.y-25*p.s;
+  }
+
+  let dx=tx-s.x;
+  let dy=ty-s.y;
+  let distance=Math.hypot(dx,dy)||1;
+  let speed=16;
+
+  /* 목표 방향으로 매 프레임 방향을 수정 */
+  s.vx=dx/distance*speed;
+  s.vy=dy/distance*speed;
+
+  /* 목표에 충분히 가까워지면 명중 처리 */
+  if(distance<=speed+13){
+   if(s.targetType==="heli"&&heli){
+    for(let j=0;j<45;j++){
+     effects.push({
+      x:heli.x+(Math.random()-.5)*150,
+      y:heli.y+(Math.random()-.5)*100,
+      color:j%2?"#ff8c24":"#ffe45c",
+      life:30,
+      r:Math.random()*19+6
+     });
+    }
+
+    heli=null;
+    heliTimer=500;
+    score+=500;
+    coins+=40;
+    checkStage();
+    hud();
+    say("💥🚁 헬기 격추 성공! 보너스 코인 40개!");
+   }else if(s.targetType==="missile"){
     effects.push({
-     x:heli.x+(Math.random()-.5)*130,
-     y:heli.y+(Math.random()-.5)*90,
-     color:"#ff8c24",life:25,r:Math.random()*16+5
+     x:tx,y:ty,color:"#ffb52b",life:28,r:35
     });
+    missiles=missiles.filter(m=>m!==s.target);
+    say("💥 특수 포탄으로 적 미사일 격추!");
+   }else if(s.targetType==="enemy"){
+    effects.push({
+     x:tx,y:ty,color:"#ff8c24",life:28,r:35
+    });
+    killEnemy(s.target);
+    say("💥 특수 포탄 적중! 적 제거!");
    }
-   heli=null;
-   heliTimer=500;
-   score+=500;coins+=40;
-   checkStage();hud();
-   say("🚀 헬기 격추 성공! 보너스 코인 40개!");
-   hit=true;
+
+   shellShots.splice(i,1);
+   continue;
   }
 
-  /* 미사일 명중 */
-  if(!hit){
-   for(let j=missiles.length-1;j>=0;j--){
-    let m=missiles[j];
-    if(Math.hypot(s.x-m.x,s.y-m.y)<25){
-     effects.push({x:m.x,y:m.y,color:"#ffb52b",life:28,r:30});
-     missiles.splice(j,1);
-     say("💥 특수 포탄으로 적 미사일 격추!");
-     hit=true;
-     break;
-    }
-   }
-  }
+  s.x+=s.vx;
+  s.y+=s.vy;
+  s.life--;
 
-  /* 적 명중 */
-  if(!hit){
-   for(let j=enemies.length-1;j>=0;j--){
-    let e=enemies[j],p=project(e);
-    if(Math.hypot(s.x-p.x,s.y-p.y)<30*p.s+10){
-     effects.push({x:p.x,y:p.y,color:"#ff8c24",life:25,r:30});
-     killEnemy(e);
-     say("💥 특수 포탄 적중! 적 제거!");
-     hit=true;
-     break;
-    }
-   }
-  }
-
-  if(hit)s.life=0;
   if(s.life<=0||s.x<-30||s.x>W+30||s.y<-30||s.y>H+30){
    shellShots.splice(i,1);
   }
@@ -764,7 +813,6 @@ function updateShop(){
  $("shopCoins").textContent=coins;
  $("costDamage").textContent=costs.damage;
  $("costMag").textContent=costs.mag;
- $("costReload").textContent=costs.reload;
 
  $("damageNow").textContent=damage;
  $("damageNext").textContent=damage+1;
@@ -772,12 +820,16 @@ function updateShop(){
  $("magNext").textContent=maxAmmo+10;
 
  let currentReload=reloadSeconds();
- let reloadDone=currentReload<=.4;
+ let reloadDone=currentReload<=.4+0.0001;
+
  $("reloadNow").textContent=currentReload.toFixed(2);
  $("reloadNext").textContent=reloadDone?"최종 단계":Math.max(.4,currentReload-.25).toFixed(2);
 
+ /* 버튼 내부 가격 표시를 삭제하지 않고 따로 전환 */
+ $("costReload").textContent=costs.reload;
+ $("reloadCostLabel").style.display=reloadDone?"none":"inline";
+ $("reloadDoneLabel").style.display=reloadDone?"inline":"none";
  $("reloadBtn").disabled=reloadDone;
- $("reloadBtn").textContent=reloadDone?"업그레이드 완료":"🪙 "+costs.reload;
 
  $("shellNow").textContent=shells;
  $("shellNext").textContent=shells+1;
@@ -790,14 +842,20 @@ function updateShop(){
 function upgrade(type){
  if(!paused||$("shop").style.display!=="flex")return;
 
- if(type==="reload"&&reloadSeconds()<=.4){
+ if(type==="reload"&&reloadSeconds()<=.4+0.0001){
   say("재장전 속도 업그레이드가 완료되었습니다!");
   updateShop();
   return;
  }
 
  let cost=costs[type];
- if(coins<cost){say("코인이 부족합니다");return}
+ if(cost===undefined)return;
+
+ if(coins<cost){
+  say("코인이 부족합니다. 적을 제거해 코인을 모으세요!");
+  return;
+ }
+
  coins-=cost;
 
  if(type==="damage"){damage++;costs.damage+=25}
@@ -807,8 +865,10 @@ function upgrade(type){
   costs.reload+=25;
  }
 
- hud();updateShop();
- if(type==="reload"&&reloadSeconds()<=.4){
+ hud();
+ updateShop();
+
+ if(type==="reload"&&reloadSeconds()<=.4+0.0001){
   say("🏆 재장전 속도 최종 업그레이드 완료! (0.40초)");
  }else{
   say("업그레이드 완료!");
