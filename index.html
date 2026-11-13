@@ -124,6 +124,7 @@ const $=id=>document.getElementById(id);
 
 let running=false,paused=false,over=false;
 let lives=3,score=0,coins=0,stage=1,kills=0;
+let wallHP=100,maxWallHP=100;
 let ammo=30,maxAmmo=30,reserve=120;
 let damage=1,reloadLevel=0;
 let shells=0,grenades=0,reloading=false;
@@ -233,7 +234,7 @@ function background(){
 }
 
 function drawCover(){
- let wallY=crouching?515:500;
+ let wallY=500;
  ctx.fillStyle="#453d31";
  ctx.fillRect(0,wallY,900,100);
 
@@ -248,7 +249,20 @@ function drawCover(){
    ctx.strokeStyle="#65553c";ctx.lineWidth=2;ctx.stroke();
    ctx.strokeStyle="#c6b083";ctx.lineWidth=1;
    ctx.beginPath();ctx.moveTo(x+12,y+8);ctx.lineTo(x+65,y+8);ctx.stroke();
+   ctx.fillStyle="#111d";
+ctx.fillRect(330,455,240,27);
+
+ctx.fillStyle="#fff";
+ctx.font="bold 16px Arial";
+ctx.fillText("WALL HP "+wallHP+"/"+maxWallHP,345,474);
+
+ctx.fillStyle="#4a2828";
+ctx.fillRect(450,461,105,10);
+
+ctx.fillStyle=wallHP>50?"#55d879":wallHP>20?"#e6a52e":"#ef4545";
+ctx.fillRect(450,461,105*(wallHP/maxWallHP),10);
   }
+
  }
  ctx.fillStyle="#55452e";
  ctx.fillRect(0,wallY+85,900,15);
@@ -671,7 +685,7 @@ function missileHit(m){
  let playerScreenX=450-playerX*.15;
  let close=Math.abs(m.x-playerScreenX)<95;
 
- if(close&&crouching){
+ if(close&&crouching&&wallHP>0){
   effects.push({x:m.x,y:500,color:"#ffb52b",life:25,r:38});
   say("🛡 엄폐 성공! 미사일을 막았습니다!");
  }else if(close&&invincible<=0){
@@ -747,13 +761,17 @@ function update(){
   }
 
   if(e.z>=1){
-   if(invincible<=0){
+   if(wallHP>0){
+    wallHP=Math.max(0,wallHP-10);
+    say("🧱 적이 담벼락을 공격했습니다! 담벼락 체력 "+wallHP);
+   }else if(invincible<=0){
     lives--;
     invincible=100;
     hud();
-    say("적이 접근했습니다! 생명력 감소");
+    say("담벼락이 무너졌습니다! 플레이어 피격!");
     if(lives<=0)endGame();
    }
+
    enemies=enemies.filter(v=>v!==e);
   }
  });
