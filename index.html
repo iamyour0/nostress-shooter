@@ -145,7 +145,7 @@ function background(){
 function project(e){
  let z=e.z;
  let scale=.22+z*1.65;
- return {x:450+(e.x-playerX)*(.35+z*1.4),y:190+z*310,s:scale};
+ return {x:450+e.x*(.35+z*1.4),y:350+z*210,s:scale};
 }
 function drawEnemy(e){
  let p=project(e),s=p.s,x=p.x,y=p.y;
