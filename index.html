@@ -3,29 +3,25 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>NoStress FPS</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#111;color:white;font-family:Arial,sans-serif;text-align:center}
-#game{width:100%;max-width:900px;margin:auto;position:relative}
-canvas{width:100%;display:block;background:#273747;cursor:crosshair;touch-action:none}
+body{margin:0;background:#111923;color:white;font-family:Arial,sans-serif;text-align:center}
+#game{max-width:900px;margin:auto;position:relative}
+canvas{display:block;width:100%;background:#718b9a;touch-action:none;cursor:crosshair}
 #hud{position:absolute;top:8px;left:8px;right:8px;display:flex;justify-content:space-between;gap:5px;pointer-events:none}
-.panel{background:#101923dd;padding:8px 10px;border-radius:9px;font-weight:bold;font-size:14px}
-#bottom{display:flex;justify-content:space-between;gap:5px;flex-wrap:wrap;padding:8px;background:#202832}
-button{border:0;border-radius:8px;padding:11px 14px;background:#e6a52e;color:#171717;font-weight:bold;cursor:pointer}
-button:active{transform:scale(.96)}
-#overlay{position:absolute;inset:0;background:#07111beF;display:flex;align-items:center;justify-content:center;padding:15px}
-.box{background:#1c2b39;border:1px solid #607386;border-radius:15px;padding:22px;width:min(95%,420px)}
-.box h1{margin:0 0 10px;color:#ffca55}
-.box p{line-height:1.6;color:#ddd}
-.choices{display:flex;gap:8px;justify-content:center;margin:18px 0}
-.choices button{flex:1}
-#message{min-height:22px;color:#ffd36b;font-weight:bold;padding:5px}
-#mobile{display:flex;justify-content:space-around;gap:8px;padding:8px;background:#202832}
+.panel{background:#101923dd;padding:8px;border-radius:8px;font-weight:bold;font-size:13px}
+#bottom,#mobile{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;padding:9px;background:#202832}
+button{border:0;border-radius:8px;padding:11px 13px;background:#e6a52e;color:#171717;font-weight:bold;cursor:pointer}
 #mobile button{flex:1;background:#46596b;color:white}
-#shop{display:none;position:absolute;inset:0;background:#07111bf2;align-items:center;justify-content:center;padding:15px}
-.shopbox{background:#1d2b39;padding:20px;border-radius:14px;width:min(95%,420px)}
+#message{min-height:26px;padding:5px;color:#ffd36b;font-weight:bold}
+#overlay,#shop{position:absolute;inset:0;background:#07111bf0;display:flex;align-items:center;justify-content:center;padding:15px}
+#shop{display:none}
+.box,.shopbox{background:#1c2b39;border:1px solid #607386;border-radius:15px;padding:20px;width:min(95%,430px)}
+.box h1{color:#ffca55}
+.choices{display:flex;gap:8px;margin:18px 0}
+.choices button{flex:1}
 .shoprow{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid #526170;padding:10px 0;text-align:left}
 .shoprow small{display:block;color:#bbb}
 @media(min-width:700px){#mobile{display:none}}
@@ -34,203 +30,191 @@ button:active{transform:scale(.96)}
 <body>
 <div id="game">
 <canvas id="c" width="900" height="600"></canvas>
-
 <div id="hud">
  <div class="panel">❤️ <span id="lives">3</span></div>
  <div class="panel">STAGE <span id="stage">1</span><br>SCORE <span id="score">0</span></div>
  <div class="panel">🪙 <span id="coins">0</span></div>
 </div>
-
 <div id="overlay">
  <div class="box">
   <h1>NO STRESS FPS</h1>
-  <p>적을 제거하고 보상을 모으세요.<br>무기를 업그레이드하고 헬기를 격추하세요!</p>
-  <b>생명력을 선택하세요</b>
+  <p>적을 제거하고 무기를 강화하세요!</p>
+  <b>생명력 선택</b>
   <div class="choices">
    <button onclick="startGame(3)">3개</button>
    <button onclick="startGame(5)">5개</button>
    <button onclick="startGame(10)">10개</button>
   </div>
-  <p style="font-size:12px">마우스 클릭: 사격<br>R: 재장전 · A/D 또는 방향키: 이동<br>F: 헬기 격추 포탄 사용</p>
+  <p style="font-size:13px;line-height:1.8">
+   마우스 클릭: 사격<br>
+   ← → 또는 A/D: 좌우 이동<br>
+   R: 재장전 · G: 수류탄 · F: 헬기 포탄
+  </p>
  </div>
 </div>
-
 <div id="shop">
  <div class="shopbox">
   <h2>🔧 무기 업그레이드</h2>
   <p>보유 코인: 🪙 <span id="shopCoins">0</span></p>
-  <div class="shoprow"><div>공격력 강화<small>적에게 주는 피해 증가</small></div><button onclick="upgrade('damage')">🪙 <span id="costDamage">30</span></button></div>
-  <div class="shoprow"><div>탄창 확장<small>한 번에 장전하는 총알 증가</small></div><button onclick="upgrade('mag')">🪙 <span id="costMag">40</span></button></div>
-  <div class="shoprow"><div>재장전 속도<small>재장전 시간 감소</small></div><button onclick="upgrade('reload')">🪙 <span id="costReload">35</span></button></div>
-  <div class="shoprow"><div>특수 포탄<small>헬기 한 대 즉시 격추</small></div><button onclick="buyShell()">🪙 100</button></div>
-  <p>탄약: <span id="ammoShop"></span> · 포탄: <span id="shellShop"></span></p>
-  <button style="width:100%;margin-top:14px" onclick="closeShop()">계속 플레이</button>
+  <div class="shoprow"><div>공격력 강화<small>피해량 증가</small></div><button onclick="upgrade('damage')">🪙 <span id="costDamage">30</span></button></div>
+  <div class="shoprow"><div>탄창 확장<small>장전 탄약 증가</small></div><button onclick="upgrade('mag')">🪙 <span id="costMag">40</span></button></div>
+  <div class="shoprow"><div>재장전 속도<small>장전 시간 단축</small></div><button onclick="upgrade('reload')">🪙 <span id="costReload">35</span></button></div>
+  <div class="shoprow"><div>특수 포탄<small>헬기 한 대 격추</small></div><button onclick="buyShell()">🪙 100</button></div>
+  <p>탄약 <span id="ammoShop"></span> · 포탄 <span id="shellShop"></span> · 수류탄 <span id="grenadeShop"></span></p>
+  <button style="width:100%;margin-top:12px" onclick="closeShop()">계속 플레이</button>
  </div>
 </div>
-
 <div id="message">적을 조준하고 클릭해서 사격하세요!</div>
 <div id="bottom">
  <button onclick="reload()">🔄 재장전 (R)</button>
  <button onclick="openShop()">🔧 업그레이드</button>
- <button onclick="useShell()">🚀 포탄 사용 (F)</button>
+ <button onclick="throwGrenade()">💣 수류탄 (G)</button>
+ <button onclick="useShell()">🚀 포탄 (F)</button>
  <button onclick="pauseGame()">Ⅱ 일시정지</button>
 </div>
 <div id="mobile">
- <button ontouchstart="moveLeft=true" ontouchend="moveLeft=false">◀ 이동</button>
- <button ontouchstart="moveRight=true" ontouchend="moveRight=false">이동 ▶</button>
+ <button ontouchstart="moveLeft=true" ontouchend="moveLeft=false" onclick="moveLeft=true">◀ 이동</button>
+ <button ontouchstart="moveRight=true" ontouchend="moveRight=false" onclick="moveRight=true">이동 ▶</button>
  <button onclick="shoot()">발사</button>
+ <button onclick="throwGrenade()">💣</button>
 </div>
 </div>
-
 <script>
-const canvas=document.getElementById("c");
-const ctx=canvas.getContext("2d");
+const c=document.getElementById("c"),ctx=c.getContext("2d");
 const W=900,H=600;
+const $=id=>document.getElementById(id);
 let running=false,paused=false,over=false;
-let lives=3,score=0,coins=0,stage=1;
+let lives=3,score=0,coins=0,stage=1,kills=0;
 let ammo=30,maxAmmo=30,reserve=120;
-let damage=1,damageLevel=0,magLevel=0,reloadLevel=0;
-let shells=0,reloading=false;
-let enemies=[],bullets=[],effects=[],missiles=[];
-let spawnTimer=0,heliTimer=700,frame=0;
+let damage=1,reloadLevel=0;
+let shells=0,grenades=0,reloading=false;
+let enemies=[],effects=[],missiles=[];
+let heli=null,heliTimer=600,spawnTimer=30,warning=0;
 let playerX=0,moveLeft=false,moveRight=false;
-let aimX=450,aimY=300,invincible=0;
-let missileWarning=0,heli=null,helicopterActive=false;
+let aimX=450,aimY=300,invincible=0,frame=0;
 let costs={damage:30,mag:40,reload:35};
 let lastTime=0;
 
-function el(id){return document.getElementById(id)}
+function say(t){$("message").textContent=t}
 function hud(){
- el("lives").textContent=lives;
- el("score").textContent=score;
- el("coins").textContent=coins;
- el("stage").textContent=stage;
+ $("lives").textContent=lives;$("score").textContent=score;
+ $("coins").textContent=coins;$("stage").textContent=stage;
 }
 function startGame(n){
- lives=n;score=0;coins=0;stage=1;
+ lives=n;score=0;coins=0;stage=1;kills=0;
  ammo=30;maxAmmo=30;reserve=120;
- damage=1;damageLevel=0;magLevel=0;reloadLevel=0;
- shells=0;enemies=[];bullets=[];effects=[];missiles=[];
- playerX=0;spawnTimer=30;heliTimer=700;
- running=true;paused=false;over=false;
- el("overlay").style.display="none";
- el("shop").style.display="none";
- hud();lastTime=performance.now();
- requestAnimationFrame(loop);
+ damage=1;reloadLevel=0;costs={damage:30,mag:40,reload:35};
+ shells=0;grenades=0;enemies=[];effects=[];missiles=[];
+ heli=null;heliTimer=600;spawnTimer=30;
+ playerX=0;running=true;paused=false;over=false;
+ reloading=false;invincible=0;frame=0;
+ $("overlay").style.display="none";$("shop").style.display="none";
+ hud();lastTime=performance.now();requestAnimationFrame(loop);
 }
-function drawBackground(){
- let g=ctx.createLinearGradient(0,0,0,H);
- g.addColorStop(0,"#6ba0c4");g.addColorStop(.55,"#c4b58c");g.addColorStop(1,"#514b3d");
+function background(){
+ let g=ctx.createLinearGradient(0,0,0,600);
+ g.addColorStop(0,"#6c9bb4");g.addColorStop(.55,"#b8b69b");g.addColorStop(1,"#594d3c");
  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-
- // distant mountains
- ctx.fillStyle="#687a79";
- ctx.beginPath();ctx.moveTo(0,310);
- for(let x=0;x<=W;x+=90)ctx.lineTo(x,230+Math.sin(x*.017)*55);
- ctx.lineTo(W,390);ctx.lineTo(0,390);ctx.fill();
-
- // ground
- ctx.fillStyle="#806d50";ctx.fillRect(0,330,W,270);
- ctx.fillStyle="#a28b64";
- ctx.beginPath();ctx.moveTo(260,330);ctx.lineTo(640,330);
- ctx.lineTo(900,600);ctx.lineTo(0,600);ctx.fill();
-
- // road perspective lines
- ctx.strokeStyle="#d0b98a";ctx.lineWidth=4;
+ ctx.fillStyle="#657a76";
+ ctx.beginPath();ctx.moveTo(0,300);
+ for(let x=0;x<=900;x+=75)ctx.lineTo(x,230+Math.sin(x*.018)*35);
+ ctx.lineTo(900,390);ctx.lineTo(0,390);ctx.fill();
+ ctx.fillStyle="#79694e";ctx.fillRect(0,350,900,250);
+ ctx.fillStyle="#a38c65";
+ ctx.beginPath();ctx.moveTo(300,340);ctx.lineTo(600,340);ctx.lineTo(900,600);ctx.lineTo(0,600);ctx.fill();
+ // road markings
+ ctx.strokeStyle="#d6c49b";ctx.lineWidth=4;
  for(let i=0;i<8;i++){
-  let y=350+i*i*5;
-  ctx.beginPath();ctx.moveTo(450-(y-330)*1.5, y);
-  ctx.lineTo(450+(y-330)*1.5,y);ctx.stroke();
+  let y=355+i*i*5;
+  ctx.beginPath();ctx.moveTo(450-(y-330)*1.4,y);ctx.lineTo(450+(y-330)*1.4,y);ctx.stroke();
  }
- // crates
+ // scenery
  for(let i=0;i<5;i++){
   let x=i*210-20;
-  ctx.fillStyle="#5a4934";ctx.fillRect(x,355,75,70);
-  ctx.strokeStyle="#b08a54";ctx.lineWidth=4;ctx.strokeRect(x,355,75,70);
-  ctx.beginPath();ctx.moveTo(x,355);ctx.lineTo(x+75,425);
-  ctx.moveTo(x+75,355);ctx.lineTo(x,425);ctx.stroke();
+  ctx.fillStyle="#5b4933";ctx.fillRect(x,355,75,65);
+  ctx.strokeStyle="#b08a54";ctx.lineWidth=4;ctx.strokeRect(x,355,75,65);
+  ctx.beginPath();ctx.moveTo(x,355);ctx.lineTo(x+75,420);ctx.moveTo(x+75,355);ctx.lineTo(x,420);ctx.stroke();
  }
- // weapon
+ // weapon view
  ctx.fillStyle="#171c22";
- ctx.beginPath();ctx.moveTo(520,600);ctx.lineTo(600,600);
- ctx.lineTo(555,410);ctx.lineTo(515,410);ctx.fill();
- ctx.fillStyle="#424c55";ctx.fillRect(518,400,55,150);
- ctx.fillStyle="#12171b";ctx.fillRect(532,370,28,80);
- ctx.fillStyle="#78838a";ctx.fillRect(538,375,14,30);
+ ctx.beginPath();ctx.moveTo(520,600);ctx.lineTo(610,600);ctx.lineTo(570,420);ctx.lineTo(525,420);ctx.fill();
+ ctx.fillStyle="#424c55";ctx.fillRect(523,405,55,145);
+ ctx.fillStyle="#12171b";ctx.fillRect(537,370,28,75);
+ ctx.fillStyle="#87949a";ctx.fillRect(542,377,15,25);
+}
+function project(e){
+ let z=e.z;
+ let scale=.22+z*1.65;
+ return {x:450+(e.x-playerX)*(.35+z*1.4),y:190+z*310,s:scale};
 }
 function drawEnemy(e){
- let x=e.x,y=e.y,s=e.size;
- ctx.save();ctx.translate(x,y);
- // shadow
- ctx.fillStyle="#28221d88";ctx.beginPath();ctx.ellipse(0,8*s,25*s,8*s,0,0,Math.PI*2);ctx.fill();
- // legs
- ctx.fillStyle="#303b36";
- ctx.fillRect(-13*s,-18*s,10*s,28*s);
- ctx.fillRect(4*s,-18*s,10*s,28*s);
- // body
- ctx.fillStyle=e.color;
- ctx.fillRect(-20*s,-58*s,40*s,43*s);
- // head
- ctx.fillStyle="#b68b6b";ctx.beginPath();ctx.arc(0,-70*s,13*s,0,Math.PI*2);ctx.fill();
- // helmet
- ctx.fillStyle="#252d2b";ctx.beginPath();ctx.arc(0,-76*s,14*s,Math.PI,0);ctx.fill();
- // gun
- ctx.fillStyle="#171b1c";ctx.fillRect(10*s,-48*s,29*s,7*s);
- // health
- ctx.fillStyle="#4a1717";ctx.fillRect(-22*s,-96*s,44*s,6);
- ctx.fillStyle="#6ce16d";ctx.fillRect(-22*s,-96*s,44*s*Math.max(0,e.hp/e.maxHp),6);
+ let p=project(e),s=p.s,x=p.x,y=p.y;
+ ctx.save();ctx.translate(x,y);ctx.scale(s,s);
+ if(e.type==="parachute"){
+  ctx.fillStyle="#e9e2ce";
+  ctx.beginPath();ctx.arc(0,-100,48,Math.PI,0);ctx.fill();
+  ctx.strokeStyle="#eee";ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(-43,-100);ctx.lineTo(-12,-50);ctx.moveTo(43,-100);ctx.lineTo(12,-50);ctx.stroke();
+  ctx.fillStyle="#c8a56a";ctx.fillRect(-18,-58,36,40);
+  ctx.fillStyle="#26352f";ctx.fillRect(-13,-18,10,27);ctx.fillRect(4,-18,10,27);
+  ctx.fillStyle="#b78b6b";ctx.beginPath();ctx.arc(0,-72,12,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#27332c";ctx.fillRect(-15,-83,30,8);
+ }else{
+  ctx.fillStyle="#29251f88";ctx.beginPath();ctx.ellipse(0,5,27,8,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#303b36";ctx.fillRect(-13,-18,10,28);ctx.fillRect(4,-18,10,28);
+  ctx.fillStyle=e.color;ctx.fillRect(-20,-58,40,43);
+  ctx.fillStyle="#b68b6b";ctx.beginPath();ctx.arc(0,-72,13,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#252d2b";ctx.beginPath();ctx.arc(0,-77,14,Math.PI,0);ctx.fill();
+  ctx.fillStyle="#171b1c";ctx.fillRect(10,-48,29,7);
+ }
+ if(e.type!=="parachute"){
+  ctx.fillStyle="#501818";ctx.fillRect(-23,-99,46,6);
+  ctx.fillStyle="#6ce16d";ctx.fillRect(-23,-99,46*Math.max(0,e.hp/e.maxHp),6);
+ }
  ctx.restore();
 }
 function drawHeli(){
  if(!heli)return;
- let x=heli.x,y=heli.y;
- ctx.save();ctx.translate(x,y);
+ ctx.save();ctx.translate(heli.x,heli.y);
  ctx.fillStyle="#263b37";ctx.fillRect(-55,-16,110,32);
  ctx.fillStyle="#42554c";ctx.beginPath();ctx.ellipse(0,0,50,22,0,0,Math.PI*2);ctx.fill();
  ctx.fillStyle="#8bb3b8";ctx.fillRect(-18,-12,27,18);
  ctx.fillStyle="#263b37";ctx.fillRect(40,-5,60,8);
- ctx.fillRect(-3,-28,6,20);
- ctx.fillRect(-65,-33,130,5);
- ctx.fillRect(-4,-38,8,15);
+ ctx.fillRect(-3,-28,6,20);ctx.fillRect(-65,-33,130,5);
  ctx.restore();
 }
-function drawAim(){
+function draw(){
+ background();
+ if(heli)drawHeli();
+ enemies.forEach(drawEnemy);
+ missiles.forEach(m=>{
+  ctx.fillStyle="#ffb52b";ctx.beginPath();ctx.arc(m.x,m.y,9,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#ff4c22";ctx.fillRect(m.x-3,m.y+7,6,14);
+ });
+ effects.forEach(e=>{
+  ctx.globalAlpha=Math.max(0,e.life/25);ctx.fillStyle=e.color;
+  ctx.beginPath();ctx.arc(e.x,e.y,e.r*(1.5-e.life/35),0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=1;
+ });
+ // crosshair
  ctx.strokeStyle="#ff4545";ctx.lineWidth=2;
  ctx.beginPath();ctx.arc(aimX,aimY,13,0,Math.PI*2);
  ctx.moveTo(aimX-23,aimY);ctx.lineTo(aimX-8,aimY);
  ctx.moveTo(aimX+8,aimY);ctx.lineTo(aimX+23,aimY);
  ctx.moveTo(aimX,aimY-23);ctx.lineTo(aimX,aimY-8);
  ctx.moveTo(aimX,aimY+8);ctx.lineTo(aimX,aimY+23);ctx.stroke();
-}
-function draw(){
- drawBackground();
- if(heli)drawHeli();
- enemies.forEach(drawEnemy);
- // missiles
- missiles.forEach(m=>{
-  ctx.fillStyle="#ffb52b";ctx.beginPath();ctx.arc(m.x,m.y,9,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle="#ff4c22";ctx.fillRect(m.x-3,m.y+7,6,14);
- });
- // effects
- effects.forEach(e=>{
-  ctx.globalAlpha=e.life/20;ctx.fillStyle=e.color;
-  ctx.beginPath();ctx.arc(e.x,e.y,e.r*(1-e.life/25+0.5),0,Math.PI*2);ctx.fill();
-  ctx.globalAlpha=1;
- });
- drawAim();
- // ammo
- ctx.fillStyle="#111c";ctx.fillRect(20,535,190,48);
- ctx.fillStyle="white";ctx.font="bold 24px Arial";
- ctx.fillText("AMMO "+ammo+" / "+reserve,32,568);
- ctx.fillStyle="#fff";ctx.font="bold 18px Arial";
- ctx.fillText("🚀 "+shells,225,565);
- if(missileWarning>0){
+ ctx.fillStyle="#111c";ctx.fillRect(18,535,200,48);
+ ctx.fillStyle="white";ctx.font="bold 22px Arial";
+ ctx.fillText("AMMO "+ammo+" / "+reserve,28,568);
+ ctx.font="bold 18px Arial";
+ ctx.fillText("💣 "+grenades+"   🚀 "+shells,235,568);
+ if(warning>0){
   ctx.fillStyle="#ff2929";ctx.font="bold 30px Arial";
   ctx.fillText("⚠ MISSILE INCOMING!",W/2-175,125);
   ctx.strokeStyle="#ff3030";ctx.lineWidth=5;
-  ctx.beginPath();ctx.arc(450,470,45+Math.sin(frame*.3)*8,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.arc(450,480,45+Math.sin(frame*.3)*8,0,Math.PI*2);ctx.stroke();
  }
- if(invincible>0 && Math.floor(frame/5)%2===0){
+ if(invincible>0&&Math.floor(frame/5)%2===0){
   ctx.fillStyle="#ffffff33";ctx.fillRect(0,0,W,H);
  }
 }
@@ -238,179 +222,201 @@ function shoot(){
  if(!running||paused||over||reloading)return;
  if(ammo<=0){say("탄약이 없습니다! R 키로 재장전");return}
  ammo--;
- let hit=null,best=65;
- enemies.forEach(e=>{
-  let d=Math.hypot(e.x-aimX,e.y-aimY);
-  if(d<best){best=d;hit=e}
- });
+ // helicopter can be shot only with special shell
+ let hit=null,part="";
+ if(heli&&aimY>heli.y-45&&aimY<heli.y+35&&Math.abs(aimX-heli.x)<65){
+  say("헬기는 특수 포탄으로만 격추할 수 있습니다!");
+ }
+ for(let e of enemies){
+  let p=project(e),s=p.s;
+  if(e.type==="parachute"){
+   // canopy hit kills immediately before landing
+   if(Math.abs(aimX-p.x)<48*s&&Math.abs(aimY-(p.y-100*s))<30*s){
+    hit=e;part="canopy";break;
+   }
+  }
+  let headY=p.y-72*s;
+  if(Math.hypot(aimX-p.x,aimY-headY)<17*s){hit=e;part="head";break}
+  if(Math.abs(aimX-p.x)<25*s&&aimY>p.y-60*s&&aimY<p.y+8*s){hit=e;part="body";break}
+ }
  if(hit){
-  hit.hp-=damage;
-  effects.push({x:hit.x,y:hit.y-35,color:"#ffcc55",life:18,r:12});
-  if(hit.hp<=0){
-   enemies=enemies.filter(e=>e!==hit);
-   score+=100;coins+=5+Math.floor(Math.random()*6);
-   if(Math.random()<.22)reserve+=30;
-   if(Math.random()<.08){shells++;say("특수 포탄 획득!")}
-   else say("적 제거! 코인 획득");
-   checkStage();hud();
+  if(part==="canopy"){
+   killEnemy(hit);say("낙하산 명중! 즉시 제거!");
+  }else{
+   hit.hp-=damage*(part==="head"?3:1);
+   effects.push({x:project(hit).x,y:project(hit).y-35,color:part==="head"?"#ffe45c":"#ff9c42",life:15,r:10});
+   if(part==="head")say("🎯 헤드샷! 3배 피해!");
+   if(hit.hp<=0)killEnemy(hit);
   }
  }else{
   effects.push({x:aimX,y:aimY,color:"#ffdf9b",life:8,r:5});
  }
+}
+function killEnemy(e){
+ enemies=enemies.filter(v=>v!==e);
+ kills++;score+=e.type==="parachute"?150:100;
+ coins+=5+Math.floor(Math.random()*6);
+ if(kills%5===0){grenades++;say("💣 적 5명 제거! 수류탄 획득!")}
+ if(kills%15===0){shells++;say("🚀 적 15명 제거! 특수 포탄 획득!")}
+ if(Math.random()<.2)reserve+=30;
+ if(Math.random()<.08)coins+=10;
+ checkStage();hud();
 }
 function reload(){
  if(!running||paused||reloading||ammo===maxAmmo||reserve<=0)return;
  reloading=true;say("재장전 중...");
  setTimeout(()=>{
   if(!running){reloading=false;return}
-  let need=maxAmmo-ammo;
-  let take=Math.min(need,reserve);
-  ammo+=take;reserve-=take;reloading=false;
-  say("재장전 완료");
- },Math.max(450,1300-reloadLevel*250));
+  let n=Math.min(maxAmmo-ammo,reserve);
+  ammo+=n;reserve-=n;reloading=false;say("재장전 완료");
+ },Math.max(400,1300-reloadLevel*250));
+}
+function throwGrenade(){
+ if(!running||paused||over)return;
+ if(grenades<=0){say("수류탄이 없습니다! 적 5명을 제거하세요.");return}
+ grenades--;
+ // find the densest group of nearby enemies
+ if(enemies.length){
+  let best=null,bestCount=0;
+  for(let e of enemies){
+   let p=project(e),count=enemies.filter(v=>{
+    let q=project(v);return Math.hypot(q.x-p.x,q.y-p.y)<150;
+   }).length;
+   if(count>bestCount){best=e;bestCount=count}
+  }
+  let center=project(best);
+  let victims=enemies.filter(e=>{
+   let p=project(e);return Math.hypot(p.x-center.x,p.y-center.y)<180;
+  });
+  victims.forEach(e=>{effects.push({x:project(e).x,y:project(e).y,color:"#ff7b22",life:25,r:35});score+=50;coins+=2});
+  enemies=enemies.filter(e=>!victims.includes(e));
+  say("💥 수류탄 폭발! 적 "+victims.length+"명 제거!");
+  checkStage();hud();
+ }else say("수류탄을 던졌지만 주변에 적이 없습니다.");
 }
 function useShell(){
  if(!running||paused||over)return;
  if(shells<=0){say("특수 포탄이 없습니다!");return}
  if(!heli){say("헬기가 나타날 때 사용하세요!");return}
- shells--;heli=null;helicopterActive=false;
- score+=500;coins+=40;hud();
- for(let i=0;i<30;i++)effects.push({x:450+Math.random()*180-90,y:150+Math.random()*90,color:"#ff8c24",life:20,r:Math.random()*15+5});
- say("🚀 헬기 격추! 보너스 코인 40개!");
+ shells--;score+=500;coins+=40;
+ for(let i=0;i<30;i++)effects.push({x:heli.x+(Math.random()-.5)*150,y:heli.y+(Math.random()-.5)*90,color:"#ff8c24",life:25,r:Math.random()*15+5});
+ heli=null;heliTimer=500;hud();say("🚀 헬기 격추! 보너스 코인 40개!");
 }
 function checkStage(){
- let next=1+Math.floor(score/700);
- if(next>stage){
-  stage=next;coins+=20;
-  say("STAGE "+stage+" 돌파! 보너스 코인 20개!");
-  hud();
+ let n=1+Math.floor(score/700);
+ if(n>stage){stage=n;coins+=20;say("STAGE "+stage+" 돌파! 보너스 코인 20개!");}
+}
+function spawnEnemy(){
+ let parachute=stage>=3&&Math.random()<.24;
+ let hp=2+Math.floor(stage*.65);
+ enemies.push({
+  x:(Math.random()-.5)*330,
+  z:.03,
+  type:parachute?"parachute":"ground",
+  hp:parachute?1:hp,maxHp:hp,
+  speed:parachute?.0025+stage*.00015:.0028+stage*.0002,
+  color:["#394d3c","#55534b","#38495b"][Math.floor(Math.random()*3)]
+ });
+}
+function spawnHeli(){
+ if(heli||stage<2)return;
+ heli={x:-100,y:115};say("헬기 출현! 미사일을 조심하세요!");
+}
+function update(){
+ frame++;
+ if(invincible>0)invincible--;
+ if(moveLeft)playerX=Math.max(-100,playerX-5);
+ if(moveRight)playerX=Math.min(100,playerX+5);
+ spawnTimer--;
+ if(spawnTimer<=0){
+  spawnEnemy();spawnTimer=Math.max(18,85-stage*5);
  }
+ heliTimer--;
+ if(heliTimer<=0&&!heli) {spawnHeli();heliTimer=Math.max(400,800-stage*20)}
+ if(heli){
+  heli.x+=2.1;
+  if(heli.x>1000)heli=null;
+  if(Math.random()<.012){
+   missiles.push({x:Math.max(100,Math.min(800,450+playerX*1.5)),y:145,speed:4+stage*.2});
+   warning=70;
+  }
+ }
+ if(warning>0)warning--;
+ missiles.forEach(m=>m.y+=m.speed);
+ missiles=missiles.filter(m=>{
+  if(m.y>480){
+   if(Math.abs(m.x-(450+playerX*1.5))<65&&invincible<=0){
+    lives--;invincible=100;hud();say("미사일 피격! 생명력 감소");
+    if(lives<=0)endGame();
+   }else effects.push({x:m.x,y:480,color:"#ff642a",life:20,r:30});
+   return false;
+  }return true;
+ });
+ enemies.forEach(e=>{
+  e.z+=e.speed;
+  e.x+=Math.sin(frame*.02+e.z*8)*.15;
+  if(e.z>=1){
+   if(invincible<=0){lives--;invincible=100;hud();say("적이 접근했습니다! 생명력 감소");if(lives<=0)endGame()}
+   e.z=.03;e.x=(Math.random()-.5)*330;
+  }
+ });
+ effects.forEach(e=>e.life--);effects=effects.filter(e=>e.life>0);
+}
+function endGame(){
+ running=false;over=true;
+ $("overlay").style.display="flex";
+ $("overlay").innerHTML=`<div class="box"><h1>GAME OVER</h1><p>최종 점수: ${score}<br>스테이지: ${stage}<br>제거한 적: ${kills}<br>남은 코인: ${coins}</p><button onclick="location.reload()">다시 시작</button></div>`;
 }
 function openShop(){
  if(!running||over)return;
- paused=true;
- el("shop").style.display="flex";
- updateShop();
+ paused=true;$("shop").style.display="flex";updateShop();
 }
 function updateShop(){
- el("shopCoins").textContent=coins;
- el("costDamage").textContent=costs.damage;
- el("costMag").textContent=costs.mag;
- el("costReload").textContent=costs.reload;
- el("ammoShop").textContent=ammo+" / "+reserve;
- el("shellShop").textContent=shells;
+ $("shopCoins").textContent=coins;
+ $("costDamage").textContent=costs.damage;
+ $("costMag").textContent=costs.mag;
+ $("costReload").textContent=costs.reload;
+ $("ammoShop").textContent=ammo+"/"+reserve;
+ $("shellShop").textContent=shells;
+ $("grenadeShop").textContent=grenades;
 }
 function upgrade(type){
  let cost=costs[type];
  if(coins<cost){say("코인이 부족합니다");return}
  coins-=cost;
- if(type==="damage"){damage++;damageLevel++;costs.damage+=25}
- if(type==="mag"){maxAmmo+=10;ammo+=10;magLevel++;costs.mag+=30}
+ if(type==="damage"){damage++;costs.damage+=25}
+ if(type==="mag"){maxAmmo+=10;ammo+=10;costs.mag+=30}
  if(type==="reload"){reloadLevel++;costs.reload+=25}
  hud();updateShop();say("업그레이드 완료!");
 }
 function buyShell(){
  if(coins<100){say("코인이 부족합니다");return}
- coins-=100;shells++;hud();updateShop();say("특수 포탄을 구매했습니다!");
+ coins-=100;shells++;hud();updateShop();say("특수 포탄 구매 완료!");
 }
 function closeShop(){
- el("shop").style.display="none";paused=false;
+ $("shop").style.display="none";paused=false;
  lastTime=performance.now();requestAnimationFrame(loop);
 }
 function pauseGame(){
  if(!running||over)return;
- paused=!paused;
- say(paused?"일시정지":"게임 재개");
+ paused=!paused;say(paused?"일시정지":"게임 재개");
  if(!paused){lastTime=performance.now();requestAnimationFrame(loop)}
-}
-function say(t){el("message").textContent=t}
-function spawnEnemy(){
- let s=.65+Math.random()*.45;
- enemies.push({
-  x:100+Math.random()*700,
-  y:180+Math.random()*210,
-  size:s,
-  hp:2+Math.floor(stage*.65),
-  maxHp:2+Math.floor(stage*.65),
-  speed:.25+stage*.06,
-  color:["#394d3c","#55534b","#38495b"][Math.floor(Math.random()*3)]
- });
-}
-function spawnHeli(){
- if(heli)return;
- heli={x:-100,y:115};
- say("헬기 출현! 미사일을 조심하세요!");
-}
-function update(){
- frame++;
- if(invincible>0)invincible--;
- if(moveLeft)playerX=Math.max(-1,playerX-.035);
- if(moveRight)playerX=Math.min(1,playerX+.035);
- aimX= Math.max(20,Math.min(880,aimX-playerX*1.4));
- spawnTimer--;
- if(spawnTimer<=0){
-  spawnEnemy();spawnTimer=Math.max(22,90-stage*5);
- }
- heliTimer--;
- if(heliTimer<=0&&!heli){
-  spawnHeli();heliTimer=Math.max(450,900-stage*25);
- }
- if(heli){
-  heli.x+=2.1;
-  if(heli.x>1000)heli=null;
-  if(Math.random()<.012){
-   missiles.push({x:Math.max(80,Math.min(820,450+playerX*180)),y:145,speed:4+stage*.2});
-   missileWarning=75;
-  }
- }
- if(missileWarning>0)missileWarning--;
- missiles.forEach(m=>m.y+=m.speed);
- missiles=missiles.filter(m=>{
-  if(m.y>475){
-   if(Math.abs(m.x-(450+playerX*160))<85 && invincible<=0){
-    lives--;invincible=100;hud();say("미사일 피격! 생명력 감소");
-    if(lives<=0)endGame();
-   }else{
-    effects.push({x:m.x,y:470,color:"#ff642a",life:20,r:30});
-   }
-   return false;
-  }
-  return true;
- });
- enemies.forEach(e=>{
-  e.y+=e.speed;
-  e.x+=Math.sin(frame*.025+e.y)*.35;
-  if(e.y>500){
-   if(invincible<=0){
-    lives--;invincible=100;hud();say("적의 공격을 받았습니다!");
-    if(lives<=0)endGame();
-   }
-   e.y=220;
-  }
- });
- effects.forEach(e=>e.life--);
- effects=effects.filter(e=>e.life>0);
-}
-function endGame(){
- running=false;over=true;
- el("overlay").style.display="flex";
- el("overlay").innerHTML=`<div class="box"><h1>GAME OVER</h1><p>최종 점수: ${score}<br>스테이지: ${stage}<br>획득 코인: ${coins}</p><button onclick="location.reload()">다시 시작</button></div>`;
 }
 function loop(t){
  if(!running||paused||over)return;
- if(t-lastTime>1000/60){update();lastTime=t}
+ if(t-lastTime>=1000/60){update();lastTime=t}
  draw();requestAnimationFrame(loop);
 }
-canvas.addEventListener("pointermove",e=>{
- let r=canvas.getBoundingClientRect();
+c.addEventListener("pointermove",e=>{
+ let r=c.getBoundingClientRect();
  aimX=(e.clientX-r.left)*W/r.width;
  aimY=(e.clientY-r.top)*H/r.height;
 });
-canvas.addEventListener("pointerdown",e=>{
- if(e.button===0)shoot();
-});
+c.addEventListener("pointerdown",e=>{if(e.button===0)shoot()});
 document.addEventListener("keydown",e=>{
+ if(["ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();
  if(e.key==="r"||e.key==="R")reload();
+ if(e.key==="g"||e.key==="G")throwGrenade();
  if(e.key==="f"||e.key==="F")useShell();
  if(e.key==="ArrowLeft"||e.key==="a"||e.key==="A")moveLeft=true;
  if(e.key==="ArrowRight"||e.key==="d"||e.key==="D")moveRight=true;
@@ -420,6 +426,7 @@ document.addEventListener("keyup",e=>{
  if(e.key==="ArrowLeft"||e.key==="a"||e.key==="A")moveLeft=false;
  if(e.key==="ArrowRight"||e.key==="d"||e.key==="D")moveRight=false;
 });
+document.addEventListener("pointerup",()=>{});
 </script>
 </body>
 </html>
